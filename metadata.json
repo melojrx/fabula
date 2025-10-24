@@ -1,0 +1,5 @@
+{
+  "name": "Gerador de Histórias Infantis",
+  "description": "Um aplicativo que gera histórias infantis personalizadas em texto e áudio usando IA. Insira a idade, nome, características da criança e um tema para criar uma história única e encantadora.",
+  "requestFramePermissions": []
+}
