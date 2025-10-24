@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Modality } from "@google/genai";
 import type { StoryFormData, OutputFormat, StoryResult } from "../types";
 import { decode, decodeAudioData } from "../utils/audio";
@@ -11,19 +10,19 @@ if (!API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
-const generateStoryText = async (formData: StoryFormData): Promise<string> => {
+const generateStoryText = async (formData: StoryFormData, signal: AbortSignal): Promise<string> => {
   const { age, name, characteristics, theme } = formData;
   const prompt = `Você é um contador de histórias infantis especialista em criar narrativas mágicas e educativas. Sua tarefa é criar uma história curta para ${name}, uma criança de ${age} anos de idade. Leve em conta as seguintes características de ${name}: "${characteristics}". A história deve ser sobre o tema "${theme}". A narrativa precisa ser positiva, com linguagem simples e apropriada para a idade, e terminar com uma lição ou moral gentil. Não inclua um título, comece diretamente com a história.`;
 
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
     contents: prompt,
-  });
+  }, { signal });
 
   return response.text;
 };
 
-const generateStoryAudio = async (storyText: string): Promise<AudioBuffer> => {
+const generateStoryAudio = async (storyText: string, signal: AbortSignal): Promise<AudioBuffer> => {
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash-preview-tts",
     contents: [{ parts: [{ text: storyText }] }],
@@ -35,14 +34,13 @@ const generateStoryAudio = async (storyText: string): Promise<AudioBuffer> => {
         },
       },
     },
-  });
+  }, { signal });
 
   const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
   if (!base64Audio) {
     throw new Error("Não foi possível gerar o áudio da história.");
   }
   
-  // The official sample rate for the TTS model is 24000
   const outputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
   const decodedBytes = decode(base64Audio);
   const audioBuffer = await decodeAudioData(decodedBytes, outputAudioContext, 24000, 1);
@@ -50,21 +48,18 @@ const generateStoryAudio = async (storyText: string): Promise<AudioBuffer> => {
   return audioBuffer;
 };
 
-export const generateStory = async (formData: StoryFormData, format: OutputFormat): Promise<StoryResult> => {
+export const generateStory = async (formData: StoryFormData, format: OutputFormat, signal: AbortSignal): Promise<StoryResult> => {
   try {
-    const storyText = await generateStoryText(formData);
+    const storyText = await generateStoryText(formData, signal);
 
     if (format === 'audio') {
-      const audioBuffer = await generateStoryAudio(storyText);
+      const audioBuffer = await generateStoryAudio(storyText, signal);
       return { text: storyText, audioBuffer };
     }
 
     return { text: storyText };
   } catch (error) {
     console.error("Erro ao gerar história:", error);
-    if (error instanceof Error) {
-        throw new Error(`Ocorreu um erro ao comunicar com a IA: ${error.message}`);
-    }
-    throw new Error("Ocorreu um erro desconhecido ao gerar a história.");
+    throw error;
   }
 };

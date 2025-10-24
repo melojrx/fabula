@@ -3,7 +3,7 @@ import type { StoryFormData, OutputFormat } from '../../types';
 import BookIcon from './icons/BookIcon';
 import SpeakerIcon from './icons/SpeakerIcon';
 import SparklesIcon from './icons/SparklesIcon';
-import LoadingSpinner from './icons/LoadingSpinner';
+import StopIcon from './icons/StopIcon';
 
 interface StoryFormProps {
   formData: StoryFormData;
@@ -12,9 +12,10 @@ interface StoryFormProps {
   setOutputFormat: React.Dispatch<React.SetStateAction<OutputFormat>>;
   onSubmit: () => void;
   isLoading: boolean;
+  onCancel: () => void;
 }
 
-const StoryForm: React.FC<StoryFormProps> = ({ formData, setFormData, outputFormat, setOutputFormat, onSubmit, isLoading }) => {
+const StoryForm: React.FC<StoryFormProps> = ({ formData, setFormData, outputFormat, setOutputFormat, onSubmit, isLoading, onCancel }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -63,9 +64,26 @@ const StoryForm: React.FC<StoryFormProps> = ({ formData, setFormData, outputForm
         </div>
       </div>
       
-      <button onClick={onSubmit} disabled={isLoading} className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-400 text-gray-900 font-bold py-3 px-4 rounded-lg shadow-lg transition-transform transform hover:scale-105 disabled:scale-100 flex items-center justify-center">
-        {isLoading ? <LoadingSpinner /> : <SparklesIcon className="w-5 h-5 mr-2" />}
-        {isLoading ? 'Criando magia...' : 'Gerar História'}
+      <button 
+        onClick={isLoading ? onCancel : onSubmit} 
+        className={`w-full font-bold py-3 px-4 rounded-lg shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center
+          ${isLoading 
+            ? 'bg-red-500 hover:bg-red-600 text-white' 
+            : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'
+          }
+        `}
+      >
+        {isLoading ? (
+          <>
+            <StopIcon className="w-5 h-5 mr-2" />
+            <span>Cancelar Geração</span>
+          </>
+        ) : (
+          <>
+            <SparklesIcon className="w-5 h-5 mr-2" />
+            <span>Gerar História</span>
+          </>
+        )}
       </button>
     </div>
   );

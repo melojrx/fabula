@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import type { StoryFormData, OutputFormat, StoryResult } from './types';
 import { generateStory } from './services/geminiService';
 import StoryForm from './src/components/StoryForm';
@@ -15,6 +15,7 @@ export default function App() {
   const [storyResult, setStoryResult] = useState<StoryResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleGenerateStory = async () => {
     if (!formData.name || !formData.age || !formData.theme || !formData.characteristics) {
@@ -26,17 +27,30 @@ export default function App() {
     setError(null);
     setStoryResult(null);
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
-      const result = await generateStory(formData, outputFormat);
+      const result = await generateStory(formData, outputFormat, controller.signal);
       setStoryResult(result);
     } catch (e) {
-      if (e instanceof Error) {
+      if (e instanceof Error && e.name === 'AbortError') {
+        console.log('Geração da história cancelada.');
+        setError('A geração da história foi cancelada.');
+      } else if (e instanceof Error) {
         setError(e.message);
       } else {
         setError("Um erro inesperado aconteceu.");
       }
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleCancelGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
   };
 
@@ -60,6 +74,7 @@ export default function App() {
             setOutputFormat={setOutputFormat}
             onSubmit={handleGenerateStory}
             isLoading={isLoading}
+            onCancel={handleCancelGeneration}
           />
           <StoryDisplay
             storyResult={storyResult}
