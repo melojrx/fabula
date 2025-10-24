@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import type { StoryFormData, OutputFormat, StoryResult } from './types';
-import { generateStory } from './services/geminiService';
+import { generateStory, generateImage } from './services/geminiService';
 import StoryForm from './src/components/StoryForm';
 import StoryDisplay from './src/components/StoryDisplay';
 
@@ -17,6 +17,11 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  const [isImageLoading, setIsImageLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const imageAbortControllerRef = useRef<AbortController | null>(null);
+
   const handleGenerateStory = async () => {
     if (!formData.name || !formData.age || !formData.theme || !formData.characteristics) {
         setError("Por favor, preencha todos os campos para criar a história.");
@@ -26,6 +31,8 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     setStoryResult(null);
+    setImageUrl(null);
+    setImageError(null);
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -51,6 +58,35 @@ export default function App() {
   const handleCancelGeneration = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+    }
+  };
+
+  const handleGenerateImage = async () => {
+    if (!storyResult?.text) return;
+
+    setIsImageLoading(true);
+    setImageUrl(null);
+    setImageError(null);
+
+    const controller = new AbortController();
+    imageAbortControllerRef.current = controller;
+
+    try {
+      const resultUrl = await generateImage(storyResult.text, controller.signal);
+      setImageUrl(resultUrl);
+    } catch (e) {
+      if (e instanceof Error && e.name !== 'AbortError') {
+        setImageError(e.message);
+      }
+    } finally {
+      setIsImageLoading(false);
+      imageAbortControllerRef.current = null;
+    }
+  };
+
+  const handleCancelImageGeneration = () => {
+    if (imageAbortControllerRef.current) {
+      imageAbortControllerRef.current.abort();
     }
   };
 
@@ -80,6 +116,11 @@ export default function App() {
             storyResult={storyResult}
             isLoading={isLoading}
             error={error}
+            onGenerateImage={handleGenerateImage}
+            isImageLoading={isImageLoading}
+            imageUrl={imageUrl}
+            imageError={imageError}
+            onCancelImageGeneration={handleCancelImageGeneration}
           />
         </main>
       </div>

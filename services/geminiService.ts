@@ -63,3 +63,15 @@ export const generateStory = async (formData: StoryFormData, format: OutputForma
     throw error;
   }
 };
+
+export const generateImage = async (storyText: string, signal: AbortSignal): Promise<string> => {
+  // Simula um tempo de espera para a chamada da API
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  if (signal.aborted) {
+    throw new DOMException('Aborted', 'AbortError');
+  }
+
+  // Lança um erro informativo, pois o modelo de imagem não está disponível nesta API ainda.
+  throw new Error("A geração de imagem ainda não está disponível. Estamos trabalhando para adicionar essa funcionalidade em breve!");
+};
