@@ -1,5 +1,5 @@
 import React from 'react';
-import type { StoryFormData, OutputFormat } from '../types';
+import type { StoryFormData, OutputFormat } from '../../types';
 import BookIcon from './icons/BookIcon';
 import SpeakerIcon from './icons/SpeakerIcon';
 import SparklesIcon from './icons/SparklesIcon';

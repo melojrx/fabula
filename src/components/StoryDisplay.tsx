@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import type { StoryResult } from '../types';
+import type { StoryResult } from '../../types';
 import BookIcon from './icons/BookIcon';
 import SpeakerIcon from './icons/SpeakerIcon';
 import PauseIcon from './icons/PauseIcon';

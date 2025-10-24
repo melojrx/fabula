@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import type { StoryFormData, OutputFormat, StoryResult } from './types';
 import { generateStory } from './services/geminiService';
-import StoryForm from './components/StoryForm';
-import StoryDisplay from './components/StoryDisplay';
+import StoryForm from './src/components/StoryForm';
+import StoryDisplay from './src/components/StoryDisplay';
 
 export default function App() {
   const [formData, setFormData] = useState<StoryFormData>({
